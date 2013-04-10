@@ -1,0 +1,81 @@
+## Embed oEmbed compatible resources via the oohEmbed API
+## Optional Parameters:
+##    $oembedH      - Specify the display height of the embed. Default: JSON height response
+##    $oembedW      - Specify the display width of the embed. Default: JSON width response
+##    $oembedClass  - Provide a specific class name for the embed div wrapper. Default: 'oembedMedia'
+##    $useThumbnail - Boolean value, allows you to display the thumbnail with a link to the resource url. Default: false?
+##
+#macro(oembed $source)
+	## MAKE SURE SOURCE URI STARTS WITH HTTP
+	#if($source.contains('http'))
+		#set($encodedSource = $source.replaceFirst(':','%3A'))
+	#else
+		#set($encodedSource = "http%3A//$!{source}")
+	#end
+	
+	## GET OEMBED JSON DATA VIA OOHEMBED API - LIST OF SUPPORTED SITES AT http://oohembed.com/
+	#set($jsonData = $json.fetch("http://oohembed.com/oohembed/?url=$!{encodedSource}"))
+
+	## OPTIONAL PARAMETERS
+	#if(!$UtilMethods.isSet($oembedClass))
+		#set($oembedClass = 'oembedMedia')
+	#end
+	## COUNTER FOR THE WRAPPER <div> ID TO PROVIDE UNIQUE IDS IF MACRO IS USED MULTIPLE TIMES ON A PAGE
+	#if(!$UtilMethods.isSet($oembedCount))
+		#set($oembedCount = 1)
+	#else
+		#set($oembedCount = $math.add($oembedCount,1))
+	#end
+	## BOOLEANS USED TO SKIP THE SIZE REPLACE IF BOTH == TRUE
+	#set($hIsDefault = false)
+	#set($wIsDefault = false)
+	#if(!$oembedH || $oembedH == '')
+		#set($oembedH    = $jsonData.get('height'))
+		#set($hIsDefault = true)
+	#end
+	#if(!$oembedW || $oembedW == '')
+		#set($oembedW    = $jsonData.get('width'))
+		#set($wIsDefault = true)
+	#end
+	#if(!$UtilMethods.isSet($useThumbnail))
+		#set($useThumbnail = false)
+	#end
+	#set($quote = '"')
+	
+	## CHECK OEMBED RESPONSE TYPE
+	#if($jsonData.get('type') == 'video' || $jsonData.get('type') == 'rich')
+		#set($oembedOutput = $jsonData.get('html'))
+		## IF A NON-JSON SUPPLIED HEIGHT OR WIDTH IS DETECTED, MODIFY THE SUPPLIED HTML 
+		#if($hIsDefault == false || $wIsDefault == false)
+			#set($oembedOutput = $oembedOutput.replaceAll('height="[0-9]*"',"height=$!{quote}$!{oembedH}$!{quote}"))
+			#set($oembedOutput = $oembedOutput.replaceAll('width="[0-9]*"',"width=$!{quote}$!{oembedW}$!{quote}"))
+		#end
+	#elseif($jsonData.get('type') == 'photo')
+		## SWITCH BETWEEN FULL IMAGE OR THUMBNAIL
+		#if($useThumbnail)
+			#if($UtilMethods.isSet($jsonData.get('thumbnail_url')))
+				#set($oembedOutput = "<a href=$!{quote}$!{jsonData.get('url')}$!{quote}><img src=$!{quote}$!{jsonData.get('thumbnail_url')}$!{quote} width=$!{quote}$!{jsonData.get('thumbnail_width')}$!{quote} height=$!{quote}$!{jsonData.get('thumbnail_height')}$!{quote} alt=$!{quote}$!{jsonData.get('title')}$!{quote} /></a>")
+			#else
+				#set($oembedOutput = '<span class="error">This photo does not appear to support thumbnails</span>')
+			#end
+		#else
+			#set($oembedOutput = "<img src=$!{quote}$!{jsonData.get('url')}$!{quote} width=$!{quote}$!{oembedW}$!{quote} height=$!{quote}$!{oembedH}$!{quote} alt=$!{quote}$!{jsonData.get('title')}$!{quote} />")
+		#end
+	#elseif($jsonData.get('type') == 'link')
+		## THE OEMBED SPEC ONLY USES THE LINK TYPE FOR LINK METADATA, DON'T USE THIS MACRO FOR THAT, JUST USE THE JSON VIEWTOOL ON ITS OWN
+		#set($oembedOutput = '<span class="error">The <em>link</em> oEmbed type is not currently supported and is only intended to be used to provide additional context to existing links. If you need to extract link oEmbed data, try just using the <em>json</em> viewtool.</span>')
+	#else
+		## SOMETHING ELSE HAS GONE WRONG, PROBABLY A BAD URI OR SERVER RESPONSE
+		#set($oembedOutput = '<span class="error">There appears to be a problem with your oEmbed response. It does not conform to an expected type (video, photo, rich, or link). Check your source URI and try again.</span>')
+	#end
+	
+<div id="oembedEmbed-$!{oembedCount}" class="$!{oembedClass}">
+		$!{oembedOutput}
+</div>  <!-- ${esc.h}oembedEmbed-$!{oembedCount} -->
+
+	## RESET VARIABLES
+	#set($jsonData     = '')
+	#set($oembedOutput = '')
+	#set($oembedW      = '')
+	#set($oembedH      = '')
+#end

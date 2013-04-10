@@ -1,0 +1,55 @@
+<a name="oembedAPI"></a>
+<fieldset>
+	<legend>oEmbed Media Pull:</legend>
+	<p>This macro will take an <a href="http://www.oembed.com/">oEmbed</a> compatible URI and pass it to 
+	the oohEmbed.com API. It takes in the JSON data response and outputs it as HTML for simple addition 
+	of video and images from sites like YouTube, Vimeo, Flickr, and more (see the <a 
+	href="http://oohembed.com/">oohEmbed web site</a> for a full list of compatible oEmbed providers.</p>
+	<p>Currently, the oEmbed() macro supports 'photo,' 'video,' or 'rich' oEmbed <code>type</type> 
+	responses.</p>
+	<p>Use of this macro requires the <a href="http://learndotcms.com/wp-content/plugins/download-monitor/download.php?id=5">JSON Viewtool</a>. This viewtool comes standard in 
+	dotCMS 1.9.1+, but will need to be added as a plugin from the link above for versions 1.9 or lower.</p>
+	<p><strong>Macro Syntax:</strong></p>
+	<pre>
+		#oembed('sourceURI')
+	</pre>
+	<strong>Arguments</strong>
+	<ul>
+		<li>
+			<em>sourceURI:</em><br />
+			This is the only require parameter and should represent a well-formed oEmbed compatible URI 
+			(see the respective web site for proper URI formatting).
+		</li>
+		<li>
+			<em>oembedH:</em><br />
+			Define the height of the oEmbed object (optional, velocity variable). Default: JSON oEmbed height 
+			value
+		</li>
+		<li>
+			<em>oembedW:</em><br />
+			Define the width of the oEmbed object (optional, velocity variable). Default: JSON oEmbed width 
+			value
+		</li>
+		<li>
+			<em>oembedClass:</em><br />
+			Provide a specific class name for the embed div wrapper (optional, velocity variable). Default: 
+			'oembedMedia'
+		</li>
+		<li>
+			<em>useThumbnail:</em><br />
+			Boolean value, allows you to display the thumbnail with a link to the resource url. Only works with 
+			'photo' type oEmbed data (optional, velocity variable). Default: false
+		</li>
+	</ul>
+	<p><strong>Example:</strong></p>
+	<pre>
+		#oembed('http://www.youtube.com/watch?v=dQw4w9WgXcQ')
+	</pre>
+	<p><strong>Advanced Example:</strong></p>
+	<pre>
+		#set($oembedH     = 267)
+		#set($oembedW     = 400)
+		#set($oembedClass = 'oembedFlickrPhoto')
+		#oembed('http://www.flickr.com/photos/fienen/4965817454')
+	</pre>
+</fieldset>

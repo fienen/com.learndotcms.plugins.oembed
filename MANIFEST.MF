@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Plugin-Name: #oembed() Macro
+Plugin-Version: 1.100914
+Author: Michael Fienen (learndotcms.com)
